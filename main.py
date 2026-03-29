@@ -1,83 +1,127 @@
 import cv2
 import numpy as np
+import os
 
-# Load image
-image = cv2.imread("image2.jpeg")  # change path
-image = cv2.resize(image, (800, 600))
-output = image.copy()
+image_exts = (".jpg", ".jpeg", ".png", ".bmp")
+video_exts = (".mp4", ".avi", ".mov", ".mkv")
 
-# Convert to grayscale
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+# Take input from user
+file = input("Enter file name (with extension): ")
 
-# Apply Gaussian Blur
-blur = cv2.GaussianBlur(gray, (5, 5), 0)
+if not os.path.exists(file):
+    print("File not found!")
+    exit()
 
-# Adaptive threshold (better than Canny for your case)
-thresh = cv2.adaptiveThreshold(
-    blur, 255,
-    cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-    cv2.THRESH_BINARY_INV,
-    11, 2
-)
+print(f"Processing: {file}")
 
-# Morphological closing (fills gaps)
-kernel = np.ones((5, 5), np.uint8)
-morph = cv2.morphologyEx(thresh, cv2.MORPH_CLOSE, kernel)
+def t(img):
+    return cv2.resize(img, (400, 300))
 
-# Find contours
-contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+def label(img, text):
+    out = img.copy()
+    cv2.rectangle(out, (0,0), (len(text)*11+10, 28), (0,0,0), -1)
+    cv2.putText(out, text, (5,20), cv2.FONT_HERSHEY_SIMPLEX,
+                0.6, (255,255,255), 1)
+    return out
 
-# Sort by area
-contours = sorted(contours, key=cv2.contourArea, reverse=True)
+def process_frame(image):
+    image = cv2.resize(image, (800, 600))
 
-card_contour = None
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)
 
-for cnt in contours:
-    area = cv2.contourArea(cnt)
-    
-    if area < 60000:
-        continue
+    edges = cv2.Canny(blur, 50, 150)
+    edge_dilated = cv2.dilate(edges, np.ones((15,15), np.uint8))
 
-    x, y, w, h = cv2.boundingRect(cnt)
-    aspect_ratio = float(w) / h
+    # Harris
+    harris = cv2.cornerHarris(np.float32(gray), 4, 3, 0.04)
+    harris = cv2.dilate(harris, None)
+    harris_mask = (harris > 0.01 * harris.max()) & (edge_dilated > 0)
+    coords = np.argwhere(harris_mask)
 
-    if not (0.5 < aspect_ratio < 0.9):
-        continue
+    # Shi-Tomasi
+    shi_pts = cv2.goodFeaturesToTrack(gray, 100, 0.01, 10)
 
-    epsilon = 0.02 * cv2.arcLength(cnt, True)
-    x, y, w, h = cv2.boundingRect(cnt)
-    aspect_ratio = float(w) / h
+    shi_corners = []
+    if shi_pts is not None:
+        for c in shi_pts:
+            x, y = c.ravel().astype(int)
+            if edge_dilated[y, x] > 0:
+                shi_corners.append((x, y))
 
-    if not (0.6 < aspect_ratio < 0.9):
-        continue
+    # Panels
+    p1 = label(t(image), "Original")
+    p2 = label(t(cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)), "Canny")
 
-    approx = cv2.approxPolyDP(cnt, epsilon, True)
+    harris_out = image.copy()
+    for y, x in coords[::6]:
+        cv2.circle(harris_out, (x,y), 2, (0,0,255), -1)
+    p3 = label(t(harris_out), "Harris")
 
-    if len(approx) == 4:
-        card_contour = approx
-        break
+    shi_out = image.copy()
+    for (x,y) in shi_corners:
+        cv2.circle(shi_out, (x,y), 4, (0,255,255), -1)
+    p4 = label(t(shi_out), "Shi-Tomasi")
 
-# Draw edges (from morph mask)
-edges = cv2.Canny(morph, 50, 150)
+    combined = image.copy()
+    for y, x in coords[::6]:
+        cv2.circle(combined, (x,y), 2, (0,0,255), -1)
+    for (x,y) in shi_corners:
+        cv2.circle(combined, (x,y), 4, (0,255,255), 1)
+    p5 = label(t(combined), "Combined")
 
-# Draw results
-cv2.drawContours(output, contours, -1, (0, 255, 0), 1)
+    empty = np.zeros_like(p1)
 
-if card_contour is not None:
-    cv2.drawContours(output, [card_contour], -1, (255, 0, 0), 3)
+    grid = np.vstack([
+        np.hstack([p1, p2, p3]),
+        np.hstack([p4, p5, empty])
+    ])
 
-    # Draw corners
-    for point in card_contour:
-        x, y = point[0]
-        cv2.circle(output, (x, y), 8, (0, 0, 255), -1)
+    return grid
+# Image
+if file.lower().endswith(image_exts):
+    img = cv2.imread(file)
+    output = process_frame(img)
 
-# Show results
-cv2.imshow("Threshold", thresh)
-cv2.imshow("Edges", edges)
-cv2.imshow("Final Output", output)
+    save_name = f"output_{file}"
+    cv2.imwrite(save_name, output)
 
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+    print(f"Saved image: {save_name}")
+    cv2.imshow("Image Output", output)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+# Video
+
+elif file.lower().endswith(video_exts):
+    cap = cv2.VideoCapture(file)
+    fps = int(cap.get(cv2.CAP_PROP_FPS)) or 20
+
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    save_name = f"output_{os.path.splitext(file)[0]}.avi"
+
+    out = cv2.VideoWriter(save_name, fourcc, fps, (1200, 600))
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        grid = process_frame(frame)
+        out.write(grid)
+
+        cv2.imshow("Video Output", grid)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    cap.release()
+    out.release()
+    cv2.destroyAllWindows()
+
+    print(f"Saved video: {save_name}")
+
+else:
+    print("Unsupported file format!")
 
 
 
