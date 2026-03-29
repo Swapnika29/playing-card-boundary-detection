@@ -33,13 +33,15 @@ def process_frame(image):
     edges = cv2.Canny(blur, 50, 150)
     edge_dilated = cv2.dilate(edges, np.ones((15,15), np.uint8))
 
-    # Harris
+    # Apply Harris corner detection, keep strong corners on edges and extract their coordinates   
+    
     harris = cv2.cornerHarris(np.float32(gray), 4, 3, 0.04)
     harris = cv2.dilate(harris, None)
     harris_mask = (harris > 0.01 * harris.max()) & (edge_dilated > 0)
     coords = np.argwhere(harris_mask)
 
-    # Shi-Tomasi
+    # Detect Shi-Tomasi corners, filter those on edges and store their pixel coordinates    
+    
     shi_pts = cv2.goodFeaturesToTrack(gray, 100, 0.01, 10)
 
     shi_corners = []
@@ -49,7 +51,6 @@ def process_frame(image):
             if edge_dilated[y, x] > 0:
                 shi_corners.append((x, y))
 
-    # Panels
     p1 = label(t(image), "Original")
     p2 = label(t(cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)), "Canny")
 
@@ -78,7 +79,9 @@ def process_frame(image):
     ])
 
     return grid
-# Image
+    
+# Process an input image file, save the processed output and display the result
+
 if file.lower().endswith(image_exts):
     img = cv2.imread(file)
     output = process_frame(img)
@@ -91,7 +94,7 @@ if file.lower().endswith(image_exts):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-# Video
+# Load a video file, get its FPS and initialize a VideoWriter to save the processed output
 
 elif file.lower().endswith(video_exts):
     cap = cv2.VideoCapture(file)
