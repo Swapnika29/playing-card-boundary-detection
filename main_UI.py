@@ -101,12 +101,12 @@ if uploaded_file is not None:
             cap = cv2.VideoCapture(tfile.name)
 
             fps = int(cap.get(cv2.CAP_PROP_FPS)) or 20
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 
-            out_path = "output_video.avi"
+            out_path = "output_video.mp4"
             out = cv2.VideoWriter(out_path, fourcc, fps, (1200, 600))
 
-            st.info("Processing video... please wait ⏳")
+            st.info("Processing video... please wait")
 
             while True:
                 ret, frame = cap.read()
@@ -127,4 +127,4 @@ if uploaded_file is not None:
 
             # Provide a download button in Streamlit to save the processed video file
             with open(out_path, "rb") as f:
-                st.download_button("Download Video", f, file_name="output.avi")
+                st.download_button("Download Video", f, file_name="output.mp4")
