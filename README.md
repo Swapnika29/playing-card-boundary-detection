@@ -1,14 +1,11 @@
-# Detecting Playing Card Edges and Corners in Real-World Scenes
+# Detecting Playing Card Edges and Corners in Real-World Scenes Using Classical Computer Vision
 
-### Using Classical Computer Vision
 
----
 
 ## Developed By
-
 *Mounika Teppola & Bala Swapnika Gopi (Group 10)*
 
----
+
 
 ## About the Project
 
@@ -16,7 +13,6 @@ This project focuses on detecting *Edges and Corners* features of playing cards 
 
 The application supports both images and videos, allowing users to visualize edge maps and corner detections interactively. It highlights the difference between dense feature detection (Harris) and refined feature selection (Shi-Tomasi), making it useful for understanding feature extraction techniques. The project is implemented in both a `command-line version` and an `interactive web-based UI` using Streamlit.
 
----
 
 ## Technologies Used
 
@@ -25,18 +21,22 @@ The application supports both images and videos, allowing users to visualize edg
 * NumPy
 * Streamlit
 
----
+
 
 ## Project Structure
 
 ```id="p1m8jz"
 ├── main.py        # Command-line version
 ├── main_UI.py     # Streamlit UI application
+├── experiment.py  # Runs blur and threshold experiments   
 ├── data           # Dataset containing Images and Videos
 ├── README.md
+├── Report.pdf
+├── Project Proposal.pptx
+├── Presentation Slides.pptx
 ```
 
----
+
 
 ## Features
 
@@ -47,11 +47,13 @@ The application supports both images and videos, allowing users to visualize edg
   * Shi-Tomasi Corner Detection
 * Supports both **image and video inputs**
 * Interactive **threshold tuning**
+* Blur-based preprocessing comparison
+* Experiment runner for robustness analysis
 * Real-time visualization 
 * Download processed output
 * Clean UI built with Streamlit
 
----
+
 
 ## File Descriptions
 
@@ -67,7 +69,7 @@ The application supports both images and videos, allowing users to visualize edg
 
 Best for quick testing and backend execution
 
----
+
 
 ### `main_UI.py`
 
@@ -80,7 +82,19 @@ Best for quick testing and backend execution
 
 Best for demonstration and user interaction
 
----
+
+
+### `experiment.py`
+
+* Experimental script for robustness analysis
+* Used to test the effect of:
+  * Different **Canny threshold settings**
+  * Different **Gaussian blur settings**
+* Saves comparison outputs for later analysis in the report
+
+Best for evaluating how preprocessing and parameter tuning affect performance in clean and cluttered scenes
+
+
 
 ## Installation
 
@@ -91,7 +105,7 @@ git clone <your-repo-link>
 cd <your-project-folder>
 ```
 
----
+
 
 ### 2. Create Virtual Environment (Optional but Recommended)
 
@@ -113,7 +127,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
----
+
 
 ### 3. Install Dependencies
 
@@ -121,7 +135,7 @@ source venv/bin/activate
 pip install streamlit opencv-python numpy
 ```
 
----
+
 
 ## How to Run
 
@@ -133,7 +147,7 @@ python main.py
 
 Enter file name (e.g., `image.jpg` or `video.mp4`) when prompted
 
----
+
 
 ### Run UI Application
 
@@ -143,14 +157,22 @@ streamlit run main_UI.py
 
 Open browser at: `http://localhost:8501`
 
----
+
+
+### Run Experiment Script
+
+```bash
+python experiment.py
+```
+
+
 
 ## Input Requirements
 
 * **Images:** `.jpg`, `.jpeg`, `.png`
 * **Videos:** `.mp4`, `.avi`, `.mov`
 
----
+
 
 ## Output
 
@@ -161,7 +183,16 @@ Open browser at: `http://localhost:8501`
 * Combined visualization
 * Download option for processed results
 
----
+
+## Experiment Outputs
+
+When running `experiment.py`, the script saves comparison outputs for:
+- different **Canny threshold settings**
+- different **Gaussian blur settings**
+
+These outputs are used for robustness analysis and report generation.
+
+
 
 ## Future Improvements
 
