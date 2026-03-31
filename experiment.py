@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-image_path = "image.jpeg"   # change this
+image_path = "image.jpeg"   
 image = cv2.imread(image_path)
 
 if image is None:
@@ -10,10 +10,8 @@ if image is None:
 
 os.makedirs("experiment_outputs", exist_ok=True)
 
-
 def t(img):
     return cv2.resize(img, (400, 300))
-
 
 def label(img, text):
     out = img.copy()
@@ -22,10 +20,8 @@ def label(img, text):
                 0.6, (255, 255, 255), 1)
     return out
 
-
 def process_frame(image, blur_kernel=(5, 5), canny_low=50, canny_high=150):
     image = cv2.resize(image, (800, 600))
-
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     if blur_kernel is not None:
@@ -36,13 +32,13 @@ def process_frame(image, blur_kernel=(5, 5), canny_low=50, canny_high=150):
     edges = cv2.Canny(blur, canny_low, canny_high)
     edge_dilated = cv2.dilate(edges, np.ones((15, 15), np.uint8))
 
-    # Harris
+    # Apply Harris corner detection, keep strong corners on edges and extract their coordinates
     harris = cv2.cornerHarris(np.float32(gray), 4, 3, 0.04)
     harris = cv2.dilate(harris, None)
     harris_mask = (harris > 0.01 * harris.max()) & (edge_dilated > 0)
     coords = np.argwhere(harris_mask)
 
-    # Shi-Tomasi
+    # Detect Shi-Tomasi corners, filter those on edges and store their pixel coordinates
     shi_pts = cv2.goodFeaturesToTrack(gray, 100, 0.01, 10)
     shi_corners = []
     if shi_pts is not None:
@@ -52,7 +48,6 @@ def process_frame(image, blur_kernel=(5, 5), canny_low=50, canny_high=150):
                 if edge_dilated[y, x] > 0:
                     shi_corners.append((x, y))
 
-    # Panels
     p1 = label(t(image), "Original")
     p2 = label(t(cv2.cvtColor(edges, cv2.COLOR_GRAY2BGR)),
                f"Canny ({canny_low},{canny_high})")
@@ -85,10 +80,7 @@ def process_frame(image, blur_kernel=(5, 5), canny_low=50, canny_high=150):
 
     return grid, len(coords), len(shi_corners), np.count_nonzero(edges)
 
-
-# ----------------------------
-# Experiment A: threshold tuning
-# ----------------------------
+# Iterate over different Canny threshold settings, process the image, save outputs and log Edge & Corner statistics
 threshold_settings = [
     (30, 100),
     (50, 150),
@@ -105,9 +97,7 @@ for low, high in threshold_settings:
     print(f"Saved {save_path} | Harris={harris_count}, Shi={shi_count}, EdgePixels={edge_pixels}")
 
 
-# ----------------------------
-# Experiment B: blur tuning
-# ----------------------------
+# Test different blur kernel sizes, process the image and save outputs to compare their effect on detection
 blur_settings = [
     None,
     (5, 5),
