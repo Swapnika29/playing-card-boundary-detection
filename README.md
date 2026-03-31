@@ -5,8 +5,13 @@
 ## Developed By
 *Mounika Teppola & Bala Swapnika Gopi (Group 10)*
 
+## External Sources
+We have used the following external sources and tools to support this implementation and analysis:
 
-
+- https://docs.plantcv.org/en/stable/gaussian_blur/
+- https://vincmazet.github.io/bip/detection/corners.html
+- https://www.geeksforgeeks.org/computer-vision/what-is-edge-detection-in-image-processing/
+  
 ## About the Project
 
 This project focuses on detecting *Edges and Corners* features of playing cards in complex real-world environments using classical computer vision techniques by leveraging algorithms such as `Canny edge detection, Harris corner detection, and Shi-Tomasi corner detection`
@@ -26,14 +31,14 @@ The application supports both images and videos, allowing users to visualize edg
 ## Project Structure
 
 ```id="p1m8jz"
-├── main.py        # Command-line version
-├── main_UI.py     # Streamlit UI application
-├── experiment.py  # Runs blur and threshold experiments   
-├── data           # Dataset containing Images and Videos
+├── main.py                     # Command-line version
+├── main_UI.py                  # Streamlit UI application
+├── experiment.py               # Runs blur and threshold experiments   
+├── Report.pdf                  # Report
+├── Project Proposal.pptx       # Original Proposal
+├── Presentation Slides.pptx    # PPT Slides
+├── data                        # Dataset containing Images and Videos
 ├── README.md
-├── Report.pdf
-├── Project Proposal.pptx
-├── Presentation Slides.pptx
 ```
 
 
